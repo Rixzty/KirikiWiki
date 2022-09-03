@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Page</title>
+    <link rel="stylesheet" href="/main.css">
+</head>
+
+<body>
+    <div id="newgroup">
+        <p id="errorm"></p>
+        <h1>Create a new group</h1>
+        <form action="/api/newgroup" method="POST">
+            <label for="groupName">Group name: </label><input type="text" id="groupName" name="groupName"><br>
+            <label for="gameName">Game name: </label><input type="text" id="gameName" name="gameName">
+            <br>
+            <button type="submit">Create</button>
+        </form>
+    </div>
+
+    <h1>Edit group</h1>
+    <div id="groups"></div>
+
+    <div id="editor" style="display: none;">
+        <hr>
+        <table id="allowedUsers">
+            <tr>
+                <td>#</td>
+                <td>Username</td>
+                <td>Email</td>
+                <td>Action</td>
+            </tr>
+        </table>
+        <hr>
+        <label for="">Spreadsheet cell: </label><input id="spreadsheetCell" type="text"><br>
+        <button onclick="saveCell()">Save</button>
+    </div>
+
+    <script>
+        var errormessages = [
+            "Couldn't create new group"
+        ]
+        var params = new URLSearchParams(location.search)
+        var error = params.get("err")
+        if (error !== null) {
+            document.getElementById("errorm").innerText = errormessages[error]
+        }
+
+        let currentId;
+
+        fetch("/api/allgroups").then(res => res.json()).then(res => {
+            res.forEach(element => {
+                var button = document.createElement("button")
+                button.innerText = `${element.group} - ${element.game}`
+                button.onclick = function () {
+                    currentId = element.id
+                    document.getElementById("spreadsheetCell").value = element.cell
+                    document.getElementById("editor").style.display = "block"
+                    document.getElementById("allowedUsers").innerHTML = ""
+                    var tr = document.createElement("tr")
+                    var td = document.createElement("td")
+                    td.innerText = "#"
+                    tr.appendChild(td)
+                    var td = document.createElement("td")
+                    td.innerText = "Username"
+                    tr.appendChild(td)
+                    var td = document.createElement("td")
+                    td.innerText = "Email"
+                    tr.appendChild(td)
+                    var td = document.createElement("td")
+                    td.innerText = "Action"
+                    tr.appendChild(td)
+                    document.getElementById("allowedUsers").appendChild(tr)
+
+                    var i = 1;
+                    element.users.forEach(user => {
+                        var tr = document.createElement("tr")
+
+                        var td = document.createElement("td")
+                        td.innerText = i
+                        tr.appendChild(td)
+
+                        var td = document.createElement("td")
+                        td.innerText = user.username
+                        tr.appendChild(td)
+
+                        var td = document.createElement("td")
+                        td.innerText = user.email
+                        tr.appendChild(td)
+
+                        var td = document.createElement("td")
+                        var button = document.createElement("button")
+                        button.innerText = "Remove"
+                        button.onclick = function () {
+                            fetch("/api/removeaccess", {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json"
+                                },
+                                body: JSON.stringify({ email: user.email, id: element.id })
+                            }).then(res => {
+                                location.reload()
+                            })
+                        }
+                        td.appendChild(button)
+                        tr.appendChild(td)
+
+                        document.getElementById("allowedUsers").appendChild(tr)
+                        i++
+                    })
+
+                    var tr = document.createElement("tr")
+
+                    var td = document.createElement("td")
+                    td.innerText = i
+                    tr.appendChild(td)
+
+                    var td = document.createElement("td")
+                    td.innerText = "---"
+                    tr.appendChild(td)
+
+                    var td = document.createElement("td")
+                    var input = document.createElement("input")
+                    input.type = "email"
+                    td.appendChild(input)
+                    tr.appendChild(td)
+
+                    var td = document.createElement("td")
+                    var button = document.createElement("button")
+                    button.innerText = "Add"
+                    button.onclick = function () {
+                        fetch("/api/addaccess", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({ email: input.value, id: element.id })
+                        }).then(res => {
+                            location.reload()
+                        })
+                    }
+                    td.appendChild(button)
+                    tr.appendChild(td)
+
+                    document.getElementById("allowedUsers").appendChild(tr)
+                }
+                document.getElementById("groups").appendChild(button)
+            })
+        })
+
+        function saveCell() {
+            fetch("/api/savecell", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ id: currentId, cell: document.getElementById("spreadsheetCell").value })
+            }).then(res => {
+                location.reload()
+            })
+        }
+    </script>
+</body>
+
+</html>

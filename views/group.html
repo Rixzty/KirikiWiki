@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Group Page</title>
+    <link rel="stylesheet" href="/main.css">
+</head>
+
+<body>
+    <a href="/" class="abutton">Back</a>
+    <h1 id="groupName">Loading...</h1>
+    <div id="counter">
+        <button onclick="substract()">-</button>
+        <p id="currentVal" style="display: inline;">0</p>
+        <button onclick="add()">+</button>
+    </div>
+    <br>
+    <button onclick="save()">Save</button>
+
+    <script>
+        var id = location.pathname.split("/")[2]
+        var counter = 0
+        console.log(id)
+        fetch("/api/getgroupdata?id=" + id).then(res => res.json()).then(res => {
+            if (res.success) {
+                document.getElementById("groupName").innerText = res.name
+                counter = res.counter
+                document.getElementById("currentVal").innerText = counter
+            }
+        })
+
+        function substract() {
+            counter--
+            document.getElementById("currentVal").innerText = counter
+        }
+
+        function add() {
+            counter++
+            document.getElementById("currentVal").innerText = counter
+        }
+
+        function save() {
+            fetch("/api/savecounter?id=" + id, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ counter: counter })
+            }).then(res => {
+                location.reload()
+            })
+        }
+    </script>
+</body>
+
+</html>

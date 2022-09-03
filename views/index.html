@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main Page</title>
+    <link rel="stylesheet" href="/main.css">
+</head>
+
+<body>
+    <p id="loggedInAs"></p>
+    <a href="/logout" class="abutton">Log out</a>
+    <hr>
+    <h1>Your groups</h1>
+    <div id="groups">
+
+    </div>
+    <script>
+        fetch("/api/getgroups").then(res => res.json()).then(res => {
+            if (res.success) {
+                document.getElementById("loggedInAs").innerText = `Logged in as ${res.username}`
+                for (const group in res.data) {
+                    const element = res.data[group];
+                    var h1 = document.createElement("h2")
+                    h1.innerText = group
+                    document.getElementById("groups").appendChild(h1)
+
+                    element.forEach(game => {
+                        var a = document.createElement("a")
+                        a.classList.add("abutton")
+                        a.innerText = game.name
+                        a.href = "/group/" + game.id
+                        document.getElementById("groups").appendChild(a)
+                    })
+                }
+            }
+        })
+    </script>
+</body>
+
+</html>
